@@ -15,6 +15,8 @@ import study.querydsl.domain.QTeam;
 import study.querydsl.domain.Team;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
 
 import java.util.List;
 
@@ -93,5 +95,69 @@ public class QuerydslTest {
 
         assertThat(teamA.get(team.name)).isEqualTo("teamA");
         assertThat(teamB.get(team.name)).isEqualTo("teamB");
+    }
+
+    @Test
+    public void join() {
+        List<Member> result
+                = factory.selectFrom(member).join(member.team, team).where(team.name.eq("teamA")).fetch();
+
+        assertThat(result).extracting("username").containsExactly("member1", "member2");
+    }
+
+    @Test
+    public void thetaJoin() {
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+
+        List<Member> result
+                = factory.select(member).from(member, team).where(member.username.eq(team.name)).fetch();
+
+        assertThat(result).extracting("username").containsExactly("teamA", "teamB");
+    }
+
+    @Test
+    public void join_on_test() {
+        List<Tuple> result
+                = factory.select(member, team).from(member).leftJoin(member.team, team)
+                .on(team.name.eq("teamA")).fetch();
+
+        for(Tuple t : result) {
+            System.out.println(t);
+        }
+    }
+
+    @Test
+    public void join_on_relation_test() {
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+
+        factory.select(member, team).from(member).leftJoin(team).on(member.username.eq("teamA")).fetch();
+    }
+
+    @PersistenceUnit
+    EntityManagerFactory emf;
+
+    @Test
+    public void join_fetch_no() {
+        em.flush();
+        em.clear();
+
+        Member member1 = factory.selectFrom(member).where(member.username.eq("member1")).fetchOne();
+
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(member1.getTeam());
+        assertThat(loaded).as("패치조인 안함").isFalse();
+    }
+
+    @Test
+    public void join_fetch_on() {
+        em.flush();
+        em.clear();
+
+        Member member1 = factory.selectFrom(member)
+                .join(member.team, team).fetchJoin().where(member.username.eq("member1")).fetchOne();
+
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(member1.getTeam());
+        assertThat(loaded).as("패치조인 안함").isTrue();
     }
 }
