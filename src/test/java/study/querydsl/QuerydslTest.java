@@ -1,6 +1,7 @@
 package study.querydsl;
 
 import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.domain.Member;
 import study.querydsl.domain.QMember;
+import study.querydsl.domain.QTeam;
 import study.querydsl.domain.Team;
 
 import javax.persistence.EntityManager;
@@ -18,6 +20,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static study.querydsl.domain.QMember.member;
+import static study.querydsl.domain.QTeam.team;
 
 @SpringBootTest
 @Transactional
@@ -70,5 +73,25 @@ public class QuerydslTest {
                 .orderBy(member.age.desc(), member.username.asc().nullsLast()).fetch();
 
         assertThat(members.get(0).getUsername()).isEqualTo("member5");
+    }
+
+    @Test
+    public void paging_test() {
+        List<Member> members =
+                factory.selectFrom(member).orderBy(member.username.desc()).offset(1).limit(2).fetch();
+
+        assertThat(members.size()).isEqualTo(2);
+    }
+
+    @Test
+    public void group_test() {
+        List<Tuple> result = factory.select(team.name, member.age.avg()).from(member).join(member.team, team)
+                .groupBy(team.name).fetch();
+
+        Tuple teamA = result.get(0);
+        Tuple teamB = result.get(1);
+
+        assertThat(teamA.get(team.name)).isEqualTo("teamA");
+        assertThat(teamB.get(team.name)).isEqualTo("teamB");
     }
 }
