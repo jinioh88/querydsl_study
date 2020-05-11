@@ -2,6 +2,7 @@ package study.querydsl;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -159,5 +160,32 @@ public class QuerydslTest {
 
         boolean loaded = emf.getPersistenceUnitUtil().isLoaded(member1.getTeam());
         assertThat(loaded).as("패치조인 안함").isTrue();
+    }
+
+    @Test
+    public void subQuery_test() {
+        QMember subMember = new QMember("subMember");
+
+        List<Member> result = factory.selectFrom(member)
+                .where(member.age.eq(JPAExpressions.select(subMember.age.max()).from(subMember))).fetch();
+
+        assertThat(result).extracting("age").containsExactly(40);
+    }
+
+    @Test
+    public void simpleProjection() {
+        List<String> result = factory.select(member.username).from(member).fetch();
+        for(String s : result) {
+            System.out.println(s);
+        }
+    }
+
+    @Test
+    public void tupleProjection() {
+        List<Tuple> result = factory.select(member.username, member.age).from(member).fetch();
+        for(Tuple t : result) {
+            String username = t.get(member.username);
+            Integer age = t.get(member.age);
+        }
     }
 }
