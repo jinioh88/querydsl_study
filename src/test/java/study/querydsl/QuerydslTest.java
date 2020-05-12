@@ -2,6 +2,7 @@ package study.querydsl;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -14,6 +15,8 @@ import study.querydsl.domain.Member;
 import study.querydsl.domain.QMember;
 import study.querydsl.domain.QTeam;
 import study.querydsl.domain.Team;
+import study.querydsl.dto.MemberDTO;
+import study.querydsl.dto.QMemberDTO;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -186,6 +189,33 @@ public class QuerydslTest {
         for(Tuple t : result) {
             String username = t.get(member.username);
             Integer age = t.get(member.age);
+        }
+    }
+
+    @Test
+    public void dtoProjection() {
+        List<MemberDTO> result
+                = factory.select(Projections.bean(MemberDTO.class, member.username, member.age)).from(member).fetch();
+        for(MemberDTO dto : result) {
+            System.out.println(dto);
+        }
+    }
+
+    @Test
+    public void dtoFieldProjection() {
+        List<MemberDTO> result
+                = factory.select(Projections.fields(MemberDTO.class, member.username, member.age)).from(member).fetch();
+        for(MemberDTO dto : result) {
+            System.out.println(dto);
+        }
+    }
+
+    @Test
+    public void testQueryProjection() {
+        List<MemberDTO> result = factory.select(new QMemberDTO(member.username, member.age)).from(member).fetch();
+
+        for(MemberDTO dto : result) {
+            System.out.println(dto);
         }
     }
 }
