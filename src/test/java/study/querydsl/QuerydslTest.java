@@ -267,6 +267,29 @@ public class QuerydslTest {
     }
 
     @Test
+    public void bulk_update() {
+        long count = factory.update(member).set(member.username, "비회원").where(member.age.lt(28)).execute();
+        em.flush();
+        em.clear();
+    }
+
+    @Test
+    public void bulk_update_agePlus() {
+        long count =
+                factory.update(member).set(member.age, member.age.add(1)).execute();
+        em.flush();
+        em.clear();
+    }
+
+    @Test
+    public void bulk_delete() {
+        long count =
+                factory.delete(member).where(member.age.gt(18)).execute();
+        em.flush();
+        em.clear();
+    }
+
+    @Test
     public void function_test() {
         String result = factory.select(Expressions.stringTemplate("function('replace', {0}, {1}, {2}",
                 member.username, "member", "M"))
