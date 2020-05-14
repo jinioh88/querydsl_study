@@ -6,6 +6,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -265,4 +266,12 @@ public class QuerydslTest {
         return ageParam != null ? member.age.eq(ageParam) : null;
     }
 
+    @Test
+    public void function_test() {
+        String result = factory.select(Expressions.stringTemplate("function('replace', {0}, {1}, {2}",
+                member.username, "member", "M"))
+                .from(member).fetchFirst();
+
+        System.out.println(result);
+    }
 }
